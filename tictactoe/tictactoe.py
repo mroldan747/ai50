@@ -1,7 +1,7 @@
 """
 Tic Tac Toe Player
 """
-
+import copy
 import math
 
 X = "X"
@@ -42,7 +42,7 @@ def actions(board):
     """
     Returns set of all possible actions (i, j) available on the board.
     """
-    possible_actions = ()
+    possible_actions = set()
     for i, line in enumerate(board):
         for j, space in enumerate(line):
             if space == EMPTY:
@@ -54,19 +54,25 @@ def result(board, action):
     """
     Returns the board that results from making move (i, j) on the board.
     """
-    if board[action[0]][action[1]] != EMPTY:
+    result_board = copy.deepcopy(board)
+    if result_board[action[0]][action[1]] != EMPTY:
         raise Exception
-    turn = player(board)
-    board[action[0]][action[1]] = turn
+    turn = player(result_board)
+    result_board[action[0]][action[1]] = turn
+    return result_board
 
 
 def winner(board):
     """
     Returns the winner of the game, if there is one.
     """
+    a= 0
     for i in range(3):
-        if i == 0 and board[i][i] == board[i+1][i+1] == board[-1][-1]:
-            return board[i][i]
+        if i == 0:
+            if board[i][i] == board[i+1][i+1] == board[-1][-1]:
+                return board[i][i]
+            if board[i][-1] == board[i+1][i+1] == board[-1][i]:
+                return board[i][-1]
         if board[i][0] == board[i][1] == board[i][2]:
             return board[i][0]
         if board[0][i] == board[1][i] == board[2][i]:
