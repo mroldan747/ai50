@@ -108,16 +108,14 @@ def shortest_path(source, target):
                 point = (action, current.state)
                 path.append(point)
                 current = current.parent
-
             return path[::-1]
 
-        visited.add(current)
+        visited.add(current.state)
         neighbors = neighbors_for_person(current.state)
         for neighbor in neighbors:
-            if not frontier.contains_state(neighbor[1]):
+            if not frontier.contains_state(neighbor[1]) and neighbor[1] not in visited:
                 node_neighbor = util.Node(neighbor[1], current, neighbor[0])
                 frontier.add(node_neighbor)
-
 
 
 def person_id_for_name(name):
