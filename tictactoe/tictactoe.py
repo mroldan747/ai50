@@ -55,7 +55,7 @@ def result(board, action):
     Returns the board that results from making move (i, j) on the board.
     """
     result_board = copy.deepcopy(board)
-    if result_board[action[0]][action[1]] != EMPTY:
+    if result_board[action[0]][action[1]] != EMPTY or 2 < action[0] or action[0] < 0 or 2 < action[1] or action[1] < 0:
         raise Exception
     turn = player(result_board)
     result_board[action[0]][action[1]] = turn
@@ -66,16 +66,15 @@ def winner(board):
     """
     Returns the winner of the game, if there is one.
     """
-    a= 0
     for i in range(3):
         if i == 0:
-            if board[i][i] == board[i+1][i+1] == board[-1][-1]:
+            if board[i][i] is not None and board[i][i] == board[i+1][i+1] == board[-1][-1]:
                 return board[i][i]
-            if board[i][-1] == board[i+1][i+1] == board[-1][i]:
+            if board[i][-1] is not None and board[i][-1] == board[i+1][i+1] == board[-1][i]:
                 return board[i][-1]
-        if board[i][0] == board[i][1] == board[i][2]:
+        if board[i][0] is not None and board[i][0] == board[i][1] == board[i][2]:
             return board[i][0]
-        if board[0][i] == board[1][i] == board[2][i]:
+        if board[0][i] is not None and board[0][i] == board[1][i] == board[2][i]:
             return board[0][i]
 
     return None
