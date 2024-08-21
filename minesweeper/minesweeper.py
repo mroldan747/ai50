@@ -176,6 +176,38 @@ class MinesweeperAI():
         for sentence in self.knowledge:
             sentence.mark_safe(cell)
 
+    def get_surrounding_cells(self, cell):
+        min_i = max(0, cell[0] - 1)
+        max_i = min(self.height - 1, cell[0] + 1)
+
+        min_j = max(0, cell[1] - 1)
+        max_j = min(self.width - 1, cell[1] + 1)
+        cells = []
+        for i in range(min_i, max_i + 1):
+            for j in range(min_j, max_j + 1):
+                if (i, j) in self.moves_made or ((i, j) in self.safes) or ((i, j) in self.mines):
+                    continue
+                cells.append((i, j))
+        return cells
+
+    def update_with_knowledge(self):
+        i = 0
+        while i < len(self.knowledge):
+            sentence = self.knowledge[i]
+            if sentence.count == len(sentence.cells):
+                self.knowledge.pop(i)
+                for cell in sentence.cells:
+                    self.mark_mine(cell)
+            elif sentence.count == 0:
+                self.knowledge.pop(i)
+                for cell in sentence.cells:
+                    self.mark_safe(cell)
+            else:
+                i += 1
+
+
+
+
     def add_knowledge(self, cell, count):
         """
         Called when the Minesweeper board tells us, for a given
@@ -192,23 +224,46 @@ class MinesweeperAI():
                if they can be inferred from existing knowledge
         """
         self.moves_made.add(cell)
+        
+        self.mark_safe(cell)
+        new_knowledge = []
+
+        cells = self.get_surrounding_cells(cell)
+
         if count == 0:
-            self.mark_safe(cell)
-        self.knowledge.append(Sentence(cell, count))
-        i = 0
-        while i < len(self.knowledge):
-            sentence1 = self.knowledge[i]
-            j = i
-            while j < len(self.knowledge):
-                sentence2 = self.knowledge[j]
+            for cell in cells:
+                self.mark_safe(cell)
+        elif count == len(cells):
+            for cell in cells:
+                self.mark_mine(cell)
+        else:
+            sentence = Sentence(cells, count)
+            new_knowledge = [sentence]
+
+        self.update_with_knowledge()
+
+        while new_knowledge:
+            sentence1 = new_knowledge.pop()
+            if len(sentence1.cells) == sentence1.count:
+                for cell in cells:
+                    self.mark_mine(cell)
+                continue
+            elif sentence1.count == 0:
+                for cell in cells:
+                    self.mark_safe(cell)
+                continue
+            for sentence2 in self.knowledge:
                 if sentence1.cells.issubset(sentence2.cells):
                     cells = sentence2.cells - sentence1.cells
                     count = sentence2.count - sentence1.count
-                    self.knowledge.append(Sentence(cells, count))
+                    new_knowledge.append(Sentence(cells, count))
                 elif sentence2.cells.issubset(sentence1.cells):
                     cells = sentence1.cells - sentence2.cells
                     count = sentence1.count - sentence2.count
-                    self.knowledge.append(Sentence(cells, count))
+                    new_knowledge.append(Sentence(cells, count))
+            self.knowledge.append(sentence1)
+
+
 
 
     def make_safe_move(self):
@@ -220,7 +275,10 @@ class MinesweeperAI():
         This function may use the knowledge in self.mines, self.safes
         and self.moves_made, but should not modify any of those values.
         """
-        raise NotImplementedError
+        for i in self.safes:
+            if i not in self.moves_made:
+                return i
+        
 
     def make_random_move(self):
         """
@@ -229,4 +287,8 @@ class MinesweeperAI():
             1) have not already been chosen, and
             2) are not known to be mines
         """
-        raise NotImplementedError
+        safe_moves = []
+        for i in self.safes:
+            if i not in self.moves_made:
+                return safe_moves.append(i)
+        return random.choice(safe_moves) if safe_moves else None
