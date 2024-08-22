@@ -1,3 +1,4 @@
+import copy
 import itertools
 import random
 
@@ -113,7 +114,7 @@ class Sentence():
         """
         Returns the set of all cells in self.cells known to be safe.
         """
-        if self.count == 0 :
+        if self.count == 0:
             return self.cells
         return set()
 
@@ -185,7 +186,7 @@ class MinesweeperAI():
         cells = []
         for i in range(min_i, max_i + 1):
             for j in range(min_j, max_j + 1):
-                if (i, j) in self.moves_made or ((i, j) in self.safes) or ((i, j) in self.mines):
+                if (i, j) in self.moves_made or ((i, j) in self.safes):
                     continue
                 cells.append((i, j))
         return cells
@@ -205,8 +206,10 @@ class MinesweeperAI():
             else:
                 i += 1
 
-
-
+    def create_new_sentence(self, sentence_out, sentence_in):
+        cells = sentence_out.cells - sentence_in.cells
+        count = sentence_out.count - sentence_in.count
+        return Sentence(cells, count)
 
     def add_knowledge(self, cell, count):
         """
@@ -224,11 +227,16 @@ class MinesweeperAI():
                if they can be inferred from existing knowledge
         """
         self.moves_made.add(cell)
-        
+
         self.mark_safe(cell)
         new_knowledge = []
 
         cells = self.get_surrounding_cells(cell)
+
+        for i in cells:
+            if i in self.mines:
+                cells.remove(i)
+                count -= 1
 
         if count == 0:
             for cell in cells:
@@ -254,17 +262,12 @@ class MinesweeperAI():
                 continue
             for sentence2 in self.knowledge:
                 if sentence1.cells.issubset(sentence2.cells):
-                    cells = sentence2.cells - sentence1.cells
-                    count = sentence2.count - sentence1.count
-                    new_knowledge.append(Sentence(cells, count))
+                    sentence = self.create_new_sentence(sentence2, sentence1)
+                    new_knowledge.append(sentence)
                 elif sentence2.cells.issubset(sentence1.cells):
-                    cells = sentence1.cells - sentence2.cells
-                    count = sentence1.count - sentence2.count
-                    new_knowledge.append(Sentence(cells, count))
+                    sentence = self.create_new_sentence(sentence1, sentence2)
+                    new_knowledge.append(sentence)
             self.knowledge.append(sentence1)
-
-
-
 
     def make_safe_move(self):
         """
@@ -278,7 +281,6 @@ class MinesweeperAI():
         for i in self.safes:
             if i not in self.moves_made:
                 return i
-        
 
     def make_random_move(self):
         """
